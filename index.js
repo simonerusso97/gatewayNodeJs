@@ -6,7 +6,7 @@ const port = '1883'
 const clientId = `mqtt_${Math.random().toString(16).slice(3)}`
 const connectUrl = `mqtt://${host}:${port}`
 const subTopic = "stat/tasmota_8231A8/POWER1";
-
+var status;
 
 var app = express();
 
@@ -34,13 +34,11 @@ client.subscribe(subTopic, () => {
     console.log(`Subscribe to topic '${subTopic}'`)
 });
 
-client.on('message', (subTopic, payload) => {
-    console.log('Received Message:', subTopic, payload.toString())
-})
+
 
 app.post("/changeStatus", (req, res) => {
     const changeStatusTopic = "cmnd/tasmota_8231A8/POWER1";
-    client.publish(changeStatusTopic, req.body.status, { qos: 0, retain: false }, (error) => {
+    client.publish(changeStatusTopic, req.body.status, { qos: 2, retain: false }, (error) => {
         if (error) {
             console.error(error)
         }
@@ -50,10 +48,18 @@ app.post("/changeStatus", (req, res) => {
 
 app.get("/getStatus", (req, res ) => {
     const getStatusTopic = "cmnd/tasmota_8231A8/Power1"
-    client.publish(getStatusTopic, "", { qos: 0, retain: false }, (error) => {
+    //TODO: sincronizzare
+    client.publish(getStatusTopic, "", { qos: 2, retain: false }, (error) => {
         if (error) {
             console.error(error)
         }
     })
-    res.sendStatus(200);
+    client.once('message', (subTopic, payload) => {
+        console.log('Received Message (ON):', subTopic, payload.toString())
+        status = payload.toString();
+        res.json("status:" + status);
+        res.sendStatus(200);
+    });
+    console.log('status:', status)
+
 });
