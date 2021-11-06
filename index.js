@@ -35,10 +35,19 @@ client.subscribe(subTopic, () => {
 
 
 
-app.post("/changeStatus", (req, res) => {
+app.get("/changeStatusON", (req, res) => {
     const changeStatusTopic = "cmnd/tasmota_8231A8/POWER1";
-    console.log("change status: status = ", req.body.status);
-    client.publish(changeStatusTopic, req.body.status, { qos: 2, retain: false }, (error) => {
+    client.publish(changeStatusTopic, "ON", { qos: 2, retain: false }, (error) => {
+        if (error) {
+            console.error(error);
+        }
+    })
+    res.sendStatus(200);
+});
+
+app.get("/changeStatusOFF", (req, res) => {
+    const changeStatusTopic = "cmnd/tasmota_8231A8/POWER1";
+    client.publish(changeStatusTopic, "OFF", { qos: 2, retain: false }, (error) => {
         if (error) {
             console.error(error);
         }
